@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FORGE Audit Report</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔍 FORGE Audit Report</h1>
+        </div>
+        
+        <div class="form-container">
+            <form id="auditForm">
+                <!-- Audit Name Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('auditname')">
+                        <div class="section-header-content">
+                            <h2>AUDIT NAME</h2>
+                            <div class="subheading">// Enter the name/title of the audit //</div>
+                        </div>
+                        <div class="section-buttons">
+                            <button type="button" class="save-btn" onclick="saveSection('auditname', event)">Save</button>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content" id="auditname-content">
+                        <div class="form-group">
+                            <div class="field-with-ai">
+                                <label for="auditName">Audit Name</label>
+                                <button type="button" class="enhance-ai-button" onclick="openAIModal('auditName', 'Audit Name')">
+                                    ✨ Enhance with AI
+                                </button>
+                            </div>
+                            <input type="text" id="auditName" name="auditName" placeholder="Enter the audit name or title...">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Executive Summary Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('executive')">
+                        <div class="section-header-content">
+                            <h2>EXECUTIVE SUMMARY</h2>
+                            <div class="subheading">// Include reason for audit, high level scope, high level findings //</div>
+                        </div>
+                        <div class="section-buttons">
+                            <button type="button" class="save-btn" onclick="saveSection('executive', event)">Save</button>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content" id="executive-content">
+                        <div class="example-box">
+                            <h4>Example:</h4>
+                            <p>VP, FinOps Services requested an audit of Critical Vendor processes in 2025. This document summarizes CSI's findings, business owner's responses and actions items on the global audit performed on Critical Vendor Processes. CSI reviewed critical vendor processes, controls, and payments for the 12-month period ending 31-Dec-2025. Overall, CSI identified XX findings rated according to the methodology included in Appendix A (XX High, XX Medium) and XX improvement opportunities.</p>
+                        </div>
+                        <div class="form-group">
+                            <div class="field-with-ai">
+                                <label for="executiveSummary">Executive Summary</label>
+                                <button type="button" class="enhance-ai-button" onclick="openAIModal('executiveSummary', 'Executive Summary')">
+                                    ✨ Enhance with AI
+                                </button>
+                            </div>
+                            <textarea id="executiveSummary" name="executiveSummary" placeholder="Enter your executive summary here..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Background Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('background')">
+                        <div class="section-header-content">
+                            <h2>BACKGROUND</h2>
+                            <div class="subheading">// Include context and background of the teams, process, systems //</div>
+                        </div>
+                        <div class="section-buttons">
+                            <button type="button" class="save-btn" onclick="saveSection('background', event)">Save</button>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content" id="background-content">
+                        <div class="example-box">
+                            <h4>Example:</h4>
+                            <p>A critical vendor (CV) is defined as a vendor who, as a result of non/late payment, could impact Amazon by causing building and office space to be unsafe for use, increasing the risk of reputational damage to Amazon or non-negotiable penalties/fees. CVs include building and locker rentals (e.g., building rent, lease/locker rent, payment to landlords), telecom (e.g., internet, fixed lines), utility expenses (e.g., gas, electric, water, waste) and employee benefit payment (e.g., insurance, health care, meal passes, education reimbursement and relocation charges). The vendors providing these services have been flagged as critical based on the risk and penalty associated with the payment delay for their services offered at Amazon facilities worldwide. In 2022, $25BN was paid to Critical Vendors against 387,425 invoices. Invoice processing is spread across different support teams using tools such as Sequentra, Rivermine, Tango, & Creature, as well as CV Service Centers (SCs) globally, to ensure critical services are not impacted by late payments. The Global Critical Vendor Service Center (CV SC) team under FinOps Corp AP SC operates out of 3 service centers (India, China, and Costa Rica) that ensure on-time and accurate payments for critical vendors.</p>
+                        </div>
+                        <div class="form-group">
+                            <div class="field-with-ai">
+                                <label for="background">Background</label>
+                                <button type="button" class="enhance-ai-button" onclick="openAIModal('background', 'Background')">
+                                    ✨ Enhance with AI
+                                </button>
+                            </div>
+                            <textarea id="background" name="background" placeholder="Enter your background information here..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scope Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('scope')">
+                        <div class="section-header-content">
+                            <h2>SCOPE</h2>
+                            <div class="subheading">// Define what is included and excluded from the audit scope //</div>
+                        </div>
+                        <div class="section-buttons">
+                            <button type="button" class="save-btn" onclick="saveSection('scope', event)">Save</button>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content" id="scope-content">
+                        <div class="form-group">
+                            <div class="field-with-ai">
+                                <label for="scopeIncluded">Scope Included</label>
+                                <button type="button" class="enhance-ai-button" onclick="openAIModal('scopeIncluded', 'Scope Included')">
+                                    ✨ Enhance with AI
+                                </button>
+                            </div>
+                            <textarea id="scopeIncluded" name="scopeIncluded" placeholder="Enter what is included in the audit scope..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <div class="field-with-ai">
+                                <label for="scopeExcluded">Scope Excluded</label>
+                                <button type="button" class="enhance-ai-button" onclick="openAIModal('scopeExcluded', 'Scope Excluded')">
+                                    ✨ Enhance with AI
+                                </button>
+                            </div>
+                            <textarea id="scopeExcluded" name="scopeExcluded" placeholder="Enter what is excluded from the audit scope..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Findings and Action Items Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('findings')">
+                        <div class="section-header-content">
+                            <h2>FINDINGS AND ACTION ITEMS</h2>
+                            <div class="subheading">// Document audit findings with recommendations and action items //</div>
+                        </div>
+                        <div class="section-buttons">
+                            <button type="button" class="save-btn" onclick="saveSection('findings', event)">Save</button>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content" id="findings-content">
+                        <div id="findingsContainer">
+                            <!-- Findings will be dynamically added here -->
+                        </div>
+                        <button type="button" class="add-finding" onclick="addFinding()">+ Add Finding</button>
+                    </div>
+                </div>
+
+                <!-- Appendix Section -->
+                <div class="section">
+                    <div class="section-header" onclick="toggleSection('appendix')">
+                        <div class="section-header-content">
+                            <h2>APPENDIX</h2>
+                            <div class="subheading">// Additional supporting documentation and methodologies //</div>
+                        </div>
+                        <div class="section-buttons">
+                            <button type="button" class="save-btn" onclick="saveSection('appendix', event)">Save</button>
+                            <span class="toggle-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="section-content" id="appendix-content">
+                        <div class="form-group">
+                            <label for="appendix">Appendix</label>
+                            <textarea id="appendix" name="appendix" placeholder="Enter additional supporting documentation, methodologies, or references..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="buttons">
+                    <button type="button" class="btn btn-secondary" onclick="clearForm()">Clear Form</button>
+                    <button type="button" class="btn btn-primary" onclick="previewReport()">Preview Report</button>
+                    <button type="button" class="btn btn-success" onclick="exportReport()">Export Report</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- AI Enhancement Modal -->
+    <div id="aiModal" class="ai-modal">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <h3>AI Enhancement</h3>
+                <button class="ai-close-btn" onclick="closeAIModal()">✕</button>
+            </div>
+            
+            <div class="ai-modal-body">
+                <!-- Left Panel - Current Content -->
+                <div class="ai-left-panel">
+                    <div class="ai-section-title">Current Content</div>
+                    <div class="current-content" id="currentContent">
+                        No content available
+                    </div>
+                </div>
+                
+                <!-- Right Panel -->
+                <div class="ai-right-panel">
+                    <!-- Input Section -->
+                    <div class="ai-input-section">
+                        <div class="ai-section-title">Enhancement Prompt</div>
+                        <div class="ai-description" style="margin-bottom: 15px; color: #6c757d;">
+                            Enter a prompt describing what you'd like to improve:
+                        </div>
+                        <textarea id="aiPromptText" class="enhancement-textarea" placeholder="Describe how you'd like to enhance this section..." style="height: 120px;"></textarea>
+                    </div>
+                    
+                    <!-- Output Section -->
+                    <div class="ai-output-section">
+                        <div class="ai-section-title">Enhanced Content</div>
+                        <div class="enhanced-content" id="enhancedContent">
+                            Enhanced content will appear here after processing...
+                        </div>
+                        <div id="enhancementPlaceholder" style="color: #999; font-style: italic; padding: 20px; text-align: center;">
+                            Click "Enhance Section" to generate improved content
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="ai-modal-footer">
+                <div class="ai-modal-buttons">
+                    <button class="ai-cancel-btn" onclick="closeAIModal()">Cancel</button>
+                    <button class="ai-enhance-btn" onclick="enhanceSection()">Enhance Section</button>
+                    <button class="ai-apply-btn" onclick="applyEnhancement()" style="display: none; background: #28a745; color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; margin-left: 10px;">Apply Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="previewModal" class="preview-modal">
+        <div class="preview-content">
+            <button class="close-preview" onclick="closePreview()">✕</button>
+            <div id="previewContent"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

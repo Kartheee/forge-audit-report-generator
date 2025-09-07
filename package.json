@@ -1,0 +1,38 @@
+{
+  "name": "forge-audit-report-generator",
+  "version": "1.0.0",
+  "description": "FORGE - Audit Report Generation Application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "webpack --mode production",
+    "build:dev": "webpack --mode development"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.18.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.873.0",
+    "cors": "^2.8.5",
+    "docx": "^8.5.0",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "multer": "^1.4.5-lts.1",
+    "openai": "^5.12.2"
+  },
+  "devDependencies": {
+    "css-loader": "^6.8.1",
+    "html-webpack-plugin": "^5.5.3",
+    "nodemon": "^3.0.1",
+    "style-loader": "^3.3.3",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4"
+  },
+  "keywords": [
+    "audit",
+    "report",
+    "generation",
+    "forge"
+  ],
+  "author": "FORGE Team",
+  "license": "MIT"
+}

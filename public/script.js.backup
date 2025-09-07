@@ -1,0 +1,649 @@
+// FORGE Audit Report Generator - Main JavaScript File
+
+class AuditReportGenerator {
+    constructor() {
+        this.currentReport = {
+            executiveSummary: {
+                reasonForAudit: '',
+                highLevelScope: '',
+                highLevelFindings: ''
+            },
+            background: {
+                context: '',
+                teamBackground: '',
+                process: '',
+                systems: ''
+            },
+            scope: {
+                included: '',
+                excluded: ''
+            },
+            findings: [],
+            appendix: []
+        };
+        
+        this.currentEnhanceSection = null;
+        this.init();
+    }
+
+    init() {
+        this.bindEvents();
+        this.loadReportData();
+        this.setupEnhancementSuggestions();
+    }
+
+    bindEvents() {
+        // Edit buttons for each section
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.toggleEditMode(e));
+        });
+
+        // Cancel buttons
+        document.querySelectorAll('.cancel-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.cancelEdit(e));
+        });
+
+        // Form submissions
+        document.getElementById('executiveSummaryFormElement').addEventListener('submit', (e) => this.saveExecutiveSummary(e));
+        document.getElementById('backgroundFormElement').addEventListener('submit', (e) => this.saveBackground(e));
+        document.getElementById('scopeFormElement').addEventListener('submit', (e) => this.saveScope(e));
+
+        // Add buttons for findings and appendix
+        document.querySelector('.add-finding-btn').addEventListener('click', () => this.addFinding());
+        document.querySelector('.add-appendix-btn').addEventListener('click', () => this.addAppendix());
+
+        // Save buttons for findings and appendix
+        document.querySelector('.save-findings-btn').addEventListener('click', () => this.saveFindings());
+        document.querySelector('.save-appendix-btn').addEventListener('click', () => this.saveAppendix());
+
+        // Generate report button
+        document.getElementById('generateReportBtn').addEventListener('click', () => this.generateReport());
+
+        // AI Enhancement
+        document.querySelectorAll('.enhance-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => this.openEnhanceModal(e));
+        });
+
+        // Modal events
+        document.getElementById('enhanceSubmitBtn').addEventListener('click', () => this.submitEnhancement());
+        document.getElementById('enhanceCancelBtn').addEventListener('click', () => this.closeEnhanceModal());
+        document.querySelector('.close-btn').addEventListener('click', () => this.closeEnhanceModal());
+
+        // Close modal when clicking outside
+        document.getElementById('enhanceModal').addEventListener('click', (e) => {
+            if (e.target.id === 'enhanceModal') {
+                this.closeEnhanceModal();
+            }
+        });
+    }
+
+    async loadReportData() {
+        try {
+            const response = await fetch('/api/report');
+            if (response.ok) {
+                this.currentReport = await response.json();
+                this.updateDisplay();
+            }
+        } catch (error) {
+            console.error('Error loading report data:', error);
+        }
+    }
+
+    updateDisplay() {
+        // Update Executive Summary
+        document.getElementById('reasonForAuditDisplay').textContent = 
+            this.currentReport.executiveSummary.reasonForAudit || 'Not specified';
+        document.getElementById('highLevelScopeDisplay').textContent = 
+            this.currentReport.executiveSummary.highLevelScope || 'Not specified';
+        document.getElementById('highLevelFindingsDisplay').textContent = 
+            this.currentReport.executiveSummary.highLevelFindings || 'Not specified';
+
+        // Update Background
+        document.getElementById('contextDisplay').textContent = 
+            this.currentReport.background.context || 'Not specified';
+        document.getElementById('teamBackgroundDisplay').textContent = 
+            this.currentReport.background.teamBackground || 'Not specified';
+        document.getElementById('processDisplay').textContent = 
+            this.currentReport.background.process || 'Not specified';
+        document.getElementById('systemsDisplay').textContent = 
+            this.currentReport.background.systems || 'Not specified';
+
+        // Update Scope
+        document.getElementById('scopeIncludedDisplay').textContent = 
+            this.currentReport.scope.included || 'Not specified';
+        document.getElementById('scopeExcludedDisplay').textContent = 
+            this.currentReport.scope.excluded || 'Not specified';
+
+        // Update Findings
+        this.updateFindingsDisplay();
+
+        // Update Appendix
+        this.updateAppendixDisplay();
+    }
+
+    toggleEditMode(e) {
+        const section = e.target.closest('.report-section');
+        const sectionId = section.id;
+        
+        // Hide all forms first
+        document.querySelectorAll('.section-form').forEach(form => {
+            form.classList.add('hidden');
+        });
+        
+        // Show the specific form
+        const form = document.getElementById(sectionId + 'Form');
+        if (form) {
+            form.classList.remove('hidden');
+            
+            // Populate form with current data
+            this.populateForm(sectionId);
+        }
+    }
+
+    populateForm(sectionId) {
+        switch(sectionId) {
+            case 'executiveSummary':
+                document.getElementById('reasonForAudit').value = this.currentReport.executiveSummary.reasonForAudit || '';
+                document.getElementById('highLevelScope').value = this.currentReport.executiveSummary.highLevelScope || '';
+                document.getElementById('highLevelFindings').value = this.currentReport.executiveSummary.highLevelFindings || '';
+                break;
+            case 'background':
+                document.getElementById('context').value = this.currentReport.background.context || '';
+                document.getElementById('teamBackground').value = this.currentReport.background.teamBackground || '';
+                document.getElementById('process').value = this.currentReport.background.process || '';
+                document.getElementById('systems').value = this.currentReport.background.systems || '';
+                break;
+            case 'scope':
+                document.getElementById('scopeIncluded').value = this.currentReport.scope.included || '';
+                document.getElementById('scopeExcluded').value = this.currentReport.scope.excluded || '';
+                break;
+            case 'findings':
+                this.populateFindingsForm();
+                break;
+            case 'appendix':
+                this.populateAppendixForm();
+                break;
+        }
+    }
+
+    cancelEdit(e) {
+        const section = e.target.closest('.report-section');
+        const form = section.querySelector('.section-form');
+        form.classList.add('hidden');
+    }
+
+    async saveExecutiveSummary(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const data = {
+            reasonForAudit: formData.get('reasonForAudit'),
+            highLevelScope: formData.get('highLevelScope'),
+            highLevelFindings: formData.get('highLevelFindings')
+        };
+
+        try {
+            const response = await fetch('/api/report/executive-summary', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                this.currentReport.executiveSummary = data;
+                this.updateDisplay();
+                this.hideForm('executiveSummaryForm');
+                this.showSuccessMessage('Executive Summary saved successfully!');
+            }
+        } catch (error) {
+            console.error('Error saving executive summary:', error);
+            this.showErrorMessage('Failed to save Executive Summary');
+        }
+    }
+
+    async saveBackground(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const data = {
+            context: formData.get('context'),
+            teamBackground: formData.get('teamBackground'),
+            process: formData.get('process'),
+            systems: formData.get('systems')
+        };
+
+        try {
+            const response = await fetch('/api/report/background', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                this.currentReport.background = data;
+                this.updateDisplay();
+                this.hideForm('backgroundForm');
+                this.showSuccessMessage('Background saved successfully!');
+            }
+        } catch (error) {
+            console.error('Error saving background:', error);
+            this.showErrorMessage('Failed to save Background');
+        }
+    }
+
+    async saveScope(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(e.target);
+        const data = {
+            included: formData.get('scopeIncluded'),
+            excluded: formData.get('scopeExcluded')
+        };
+
+        try {
+            const response = await fetch('/api/report/scope', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            if (response.ok) {
+                this.currentReport.scope = data;
+                this.updateDisplay();
+                this.hideForm('scopeForm');
+                this.showSuccessMessage('Scope saved successfully!');
+            }
+        } catch (error) {
+            console.error('Error saving scope:', error);
+            this.showErrorMessage('Failed to save Scope');
+        }
+    }
+
+    addFinding() {
+        const finding = {
+            id: Date.now(),
+            name: '',
+            rating: '',
+            ref: '',
+            description: '',
+            recommendations: '',
+            actionItems: '',
+            dueDate: '',
+            owner: ''
+        };
+
+        this.currentReport.findings.push(finding);
+        this.updateFindingsDisplay();
+        this.toggleEditMode({ target: { closest: () => document.getElementById('findings') } });
+    }
+
+    removeFinding(findingId) {
+        this.currentReport.findings = this.currentReport.findings.filter(f => f.id !== findingId);
+        this.updateFindingsDisplay();
+    }
+
+    updateFindingsDisplay() {
+        const container = document.getElementById('findingsContent');
+        
+        if (this.currentReport.findings.length === 0) {
+            container.innerHTML = '<div class="no-findings">No findings added yet. Click "Add Finding" to get started.</div>';
+            return;
+        }
+
+        container.innerHTML = this.currentReport.findings.map(finding => `
+            <div class="finding-item">
+                <h4>
+                    Finding: ${finding.name || 'Unnamed Finding'}
+                    <button class="remove-btn" onclick="app.removeFinding(${finding.id})" title="Remove Finding">×</button>
+                </h4>
+                <div class="finding-details">
+                    <p><strong>Rating:</strong> ${finding.rating || 'Not specified'} | <strong>Ref:</strong> ${finding.ref || 'Not specified'}</p>
+                    <p><strong>Description:</strong> ${finding.description || 'Not specified'}</p>
+                    <p><strong>Recommendation(s):</strong> ${finding.recommendations || 'Not specified'}</p>
+                    <p><strong>Action Item(s):</strong> ${finding.actionItems || 'Not specified'}</p>
+                    <p><strong>Due Date:</strong> ${finding.dueDate || 'Not specified'} | <strong>Owner:</strong> ${finding.owner || 'Not specified'}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    populateFindingsForm() {
+        const container = document.getElementById('findingsFormContainer');
+        
+        if (this.currentReport.findings.length === 0) {
+            container.innerHTML = '<p class="no-findings">No findings to edit. Add a finding first.</p>';
+            return;
+        }
+
+        container.innerHTML = this.currentReport.findings.map(finding => `
+            <div class="finding-item" data-finding-id="${finding.id}">
+                <h4>Finding: ${finding.name || 'Unnamed Finding'}</h4>
+                <div class="finding-grid">
+                    <div class="form-group">
+                        <label>Finding Name:</label>
+                        <input type="text" class="finding-name" value="${finding.name || ''}" placeholder="Enter finding name...">
+                    </div>
+                    <div class="form-group">
+                        <label>Rating:</label>
+                        <select class="finding-rating">
+                            <option value="">Select Rating</option>
+                            <option value="Critical" ${finding.rating === 'Critical' ? 'selected' : ''}>Critical</option>
+                            <option value="High" ${finding.rating === 'High' ? 'selected' : ''}>High</option>
+                            <option value="Medium" ${finding.rating === 'Medium' ? 'selected' : ''}>Medium</option>
+                            <option value="Low" ${finding.rating === 'Low' ? 'selected' : ''}>Low</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Reference:</label>
+                        <input type="text" class="finding-ref" value="${finding.ref || ''}" placeholder="Enter reference...">
+                    </div>
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <textarea class="finding-description" rows="3" placeholder="Enter finding description...">${finding.description || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Recommendation(s):</label>
+                        <textarea class="finding-recommendations" rows="3" placeholder="Enter recommendations...">${finding.recommendations || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Action Item(s):</label>
+                        <textarea class="finding-action-items" rows="3" placeholder="Enter action items...">${finding.actionItems || ''}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Due Date:</label>
+                        <input type="date" class="finding-due-date" value="${finding.dueDate || ''}">
+                    </div>
+                    <div class="form-group">
+                        <label>Owner (L8+ Team):</label>
+                        <input type="text" class="finding-owner" value="${finding.owner || ''}" placeholder="Enter owner...">
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async saveFindings() {
+        const findings = [];
+        document.querySelectorAll('[data-finding-id]').forEach(item => {
+            const findingId = parseInt(item.dataset.findingId);
+            const finding = this.currentReport.findings.find(f => f.id === findingId);
+            
+            if (finding) {
+                finding.name = item.querySelector('.finding-name').value;
+                finding.rating = item.querySelector('.finding-rating').value;
+                finding.ref = item.querySelector('.finding-ref').value;
+                finding.description = item.querySelector('.finding-description').value;
+                finding.recommendations = item.querySelector('.finding-recommendations').value;
+                finding.actionItems = item.querySelector('.finding-action-items').value;
+                finding.dueDate = item.querySelector('.finding-due-date').value;
+                finding.owner = item.querySelector('.finding-owner').value;
+                
+                findings.push(finding);
+            }
+        });
+
+        try {
+            const response = await fetch('/api/report/findings', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ findings })
+            });
+
+            if (response.ok) {
+                this.currentReport.findings = findings;
+                this.updateFindingsDisplay();
+                this.hideForm('findingsForm');
+                this.showSuccessMessage('Findings saved successfully!');
+            }
+        } catch (error) {
+            console.error('Error saving findings:', error);
+            this.showErrorMessage('Failed to save Findings');
+        }
+    }
+
+    addAppendix() {
+        const appendix = {
+            id: Date.now(),
+            content: ''
+        };
+
+        this.currentReport.appendix.push(appendix);
+        this.updateAppendixDisplay();
+        this.toggleEditMode({ target: { closest: () => document.getElementById('appendix') } });
+    }
+
+    removeAppendix(appendixId) {
+        this.currentReport.appendix = this.currentReport.appendix.filter(a => a.id !== appendixId);
+        this.updateAppendixDisplay();
+    }
+
+    updateAppendixDisplay() {
+        const container = document.getElementById('appendixContent');
+        
+        if (this.currentReport.appendix.length === 0) {
+            container.innerHTML = '<div class="no-appendix">No appendix items added yet. Click "Add Appendix" to get started.</div>';
+            return;
+        }
+
+        container.innerHTML = this.currentReport.appendix.map((item, index) => `
+            <div class="appendix-item">
+                <h4>
+                    Appendix ${String.fromCharCode(65 + index)}
+                    <button class="remove-btn" onclick="app.removeAppendix(${item.id})" title="Remove Appendix">×</button>
+                </h4>
+                <div class="appendix-content">
+                    ${item.content || 'No content specified'}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    populateAppendixForm() {
+        const container = document.getElementById('appendixFormContainer');
+        
+        if (this.currentReport.appendix.length === 0) {
+            container.innerHTML = '<p class="no-appendix">No appendix items to edit. Add an appendix first.</p>';
+            return;
+        }
+
+        container.innerHTML = this.currentReport.appendix.map((item, index) => `
+            <div class="appendix-item" data-appendix-id="${item.id}">
+                <h4>Appendix ${String.fromCharCode(65 + index)}</h4>
+                <div class="form-group">
+                    <label>Content:</label>
+                    <textarea class="appendix-content" rows="4" placeholder="Enter appendix content...">${item.content || ''}</textarea>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    async saveAppendix() {
+        const appendix = [];
+        document.querySelectorAll('[data-appendix-id]').forEach(item => {
+            const appendixId = parseInt(item.dataset.appendixId);
+            const appendixItem = this.currentReport.appendix.find(a => a.id === appendixId);
+            
+            if (appendixItem) {
+                appendixItem.content = item.querySelector('.appendix-content').value;
+                appendix.push(appendixItem);
+            }
+        });
+
+        try {
+            const response = await fetch('/api/report/appendix', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ appendix })
+            });
+
+            if (response.ok) {
+                this.currentReport.appendix = appendix;
+                this.updateAppendixDisplay();
+                this.hideForm('appendixForm');
+                this.showSuccessMessage('Appendix saved successfully!');
+            }
+        } catch (error) {
+            console.error('Error saving appendix:', error);
+            this.showErrorMessage('Failed to save Appendix');
+        }
+    }
+
+    openEnhanceModal(e) {
+        this.currentEnhanceSection = e.target.dataset.section;
+        document.getElementById('enhanceModal').classList.remove('hidden');
+        document.getElementById('enhancePrompt').value = '';
+    }
+
+    closeEnhanceModal() {
+        document.getElementById('enhanceModal').classList.add('hidden');
+        this.currentEnhanceSection = null;
+    }
+
+    setupEnhancementSuggestions() {
+        document.querySelectorAll('.chip').forEach(chip => {
+            chip.addEventListener('click', (e) => {
+                document.getElementById('enhancePrompt').value = e.target.dataset.prompt;
+            });
+        });
+    }
+
+    async submitEnhancement() {
+        const prompt = document.getElementById('enhancePrompt').value.trim();
+        
+        if (!prompt) {
+            this.showErrorMessage('Please enter an enhancement prompt');
+            return;
+        }
+
+        this.showLoading(true);
+        
+        try {
+            const response = await fetch('/api/report/enhance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    section: this.currentEnhanceSection,
+                    prompt: prompt
+                })
+            });
+
+            if (response.ok) {
+                const result = await response.json();
+                this.showSuccessMessage('Section enhanced successfully!');
+                this.closeEnhanceModal();
+                
+                // Reload the report data to get the enhanced content
+                await this.loadReportData();
+            } else {
+                this.showErrorMessage('Failed to enhance section');
+            }
+        } catch (error) {
+            console.error('Error enhancing section:', error);
+            this.showErrorMessage('Failed to enhance section');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    async generateReport() {
+        this.showLoading(true);
+        
+        try {
+            const response = await fetch('/api/report/generate', {
+                method: 'POST'
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'FORGE_Audit_Report.docx';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                this.showSuccessMessage('Report generated and downloaded successfully!');
+            } else {
+                this.showErrorMessage('Failed to generate report');
+            }
+        } catch (error) {
+            console.error('Error generating report:', error);
+            this.showErrorMessage('Failed to generate report');
+        } finally {
+            this.showLoading(false);
+        }
+    }
+
+    hideForm(formId) {
+        document.getElementById(formId).classList.add('hidden');
+    }
+
+    showLoading(show) {
+        const overlay = document.getElementById('loadingOverlay');
+        if (show) {
+            overlay.classList.remove('hidden');
+        } else {
+            overlay.classList.add('hidden');
+        }
+    }
+
+    showSuccessMessage(message) {
+        this.showMessage(message, 'success');
+    }
+
+    showErrorMessage(message) {
+        this.showMessage(message, 'error');
+    }
+
+    showMessage(message, type) {
+        // Create a simple toast notification
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.textContent = message;
+        toast.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 3000;
+            animation: slideIn 0.3s ease;
+            ${type === 'success' ? 'background: #059669;' : 'background: #dc2626;'}
+        `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.animation = 'slideOut 0.3s ease';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, 3000);
+    }
+}
+
+// Add CSS animations for toast
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+    }
+    @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+    }
+`;
+document.head.appendChild(style);
+
+// Initialize the application
+let app;
+document.addEventListener('DOMContentLoaded', () => {
+    app = new AuditReportGenerator();
+});
